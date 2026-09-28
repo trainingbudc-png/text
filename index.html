@@ -73,7 +73,7 @@
         const messageList = document.getElementById('messageList');
         const emptyState = document.getElementById('emptyState');
 
-        // URL ของ Google Apps Script ที่คุณให้มา
+        // URL ของ Google Apps Script ของคุณ
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwq1L7j3qJ1wyHxUSLitk5TR8nD80hflg4q6ubyfrOUxM8_Dl-n4RFXx0VMNGpkZz9H/exec';
 
         form.addEventListener('submit', e => {
@@ -92,26 +92,28 @@
             `;
             statusMsg.innerHTML = '';
 
-            // แปลงข้อมูลให้อยู่ในรูปแบบ URLSearchParams (เข้ากันได้กับ Google Apps Script ที่สุด)
+            // แปลงข้อมูลให้อยู่ในรูปแบบ URLSearchParams
             const formData = new URLSearchParams();
             formData.append('text', textValue);
-            formData.append('message', textValue); // เผื่อไว้กรณีฝั่ง GAS รับตัวแปรชื่อ message
+            formData.append('message', textValue);
 
             // ส่งข้อมูลไปยัง Google Sheets
             fetch(scriptURL, { 
                 method: 'POST', 
+                mode: 'no-cors', // เพิ่ม mode: 'no-cors' เพื่อแก้ปัญหา CORS Block
                 body: formData 
             })
             .then(response => {
-                // คืนค่าปุ่มกลับมาเหมือนเดิม
+                // เมื่อใช้ no-cors เราอาจจะไม่ได้ response.ok ที่แท้จริงกลับมา 
+                // แต่ถ้าผ่านขั้นตอนนี้มาได้ มักจะแปลว่าข้อมูลถูกส่งออกไปแล้ว
+                
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'บันทึกข้อความ';
                 
-                // แจ้งเตือนสำเร็จ
-                statusMsg.innerHTML = '<span class="text-green-600">✅ บันทึกข้อความสำเร็จ!</span>';
+                statusMsg.innerHTML = '<span class="text-green-600">✅ ส่งข้อความแล้ว!</span>';
                 setTimeout(() => statusMsg.innerHTML = '', 3000);
 
-                // นำข้อความมาแสดงบนหน้าเว็บทันที
+                // นำข้อความมาแสดงบนหน้าเว็บ
                 addMessageToScreen(textValue);
 
                 // เคลียร์กล่องข้อความ
@@ -127,30 +129,24 @@
 
         // ฟังก์ชันสร้างกล่องข้อความบนหน้าเว็บ
         function addMessageToScreen(text) {
-            // เอาคำว่า "ยังไม่มีข้อความ" ออก
             if (emptyState) {
                 emptyState.style.display = 'none';
             }
 
-            // สร้าง Element สำหรับข้อความใหม่
             const msgBox = document.createElement('div');
-            msgBox.className = 'p-3 bg-blue-50 border border-blue-100 rounded-xl shadow-sm text-gray-800 break-words animate-fade-in';
+            msgBox.className = 'p-3 bg-blue-50 border border-blue-100 rounded-xl shadow-sm text-gray-800 break-words';
             
-            // สร้างเวลาที่ส่ง
             const timeDiv = document.createElement('div');
             timeDiv.className = 'text-xs text-gray-500 mb-1';
             const now = new Date();
             timeDiv.innerText = now.toLocaleTimeString('th-TH') + ' น.';
 
-            // สร้างตัวข้อความ
             const textContent = document.createElement('div');
             textContent.innerText = text;
 
-            // ประกอบร่าง
             msgBox.appendChild(timeDiv);
             msgBox.appendChild(textContent);
 
-            // แทรกข้อความใหม่ไว้บนสุดของรายการ
             messageList.prepend(msgBox);
         }
     </script>
