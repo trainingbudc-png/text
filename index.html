@@ -4,151 +4,320 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บันทึกข้อความ</title>
-    <!-- นำเข้า Tailwind CSS สำหรับตกแต่ง -->
+    
+    <!-- นำเข้า Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- นำเข้า Font Kanit จาก Google Fonts -->
+    
+    <!-- นำเข้าฟอนต์ Kanit จาก Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Kanit', sans-serif; }
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: #f3f4f6; /* Tailwind bg-gray-100 */
+        }
+        
+        /* Animation สำหรับเวลากล่องข้อความโผล่ขึ้นมา */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center py-10">
+<body class="min-h-screen p-4 flex flex-col items-center py-8 sm:py-12">
 
     <!-- คอนเทนเนอร์หลัก -->
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-lg p-6">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
         
-        <!-- ส่วนหัว -->
-        <div class="text-center mb-6">
-            <h1 class="text-2xl font-semibold text-gray-800">ระบบบันทึกข้อความ</h1>
-            <p class="text-gray-500 text-sm mt-1">พิมพ์ข้อความเพื่อส่งไปยัง Google Sheet</p>
+        <!-- ส่วนหัว (Header) -->
+        <div class="bg-blue-600 px-6 py-5 text-center">
+            <h1 class="text-2xl font-semibold text-white flex justify-center items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                ระบบบันทึกข้อความ
+            </h1>
+            <p class="text-blue-100 text-sm mt-1">ส่งข้อมูลไปยัง Google Sheet ของคุณ</p>
         </div>
 
-        <!-- ฟอร์มสำหรับส่งข้อมูล -->
-        <form id="textForm" class="space-y-4">
-            <div>
-                <textarea 
-                    id="messageInput" 
-                    rows="4" 
-                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-                    placeholder="พิมพ์ข้อความของคุณที่นี่..."
-                    required
-                ></textarea>
-            </div>
+        <!-- พื้นที่เนื้อหาหลัก -->
+        <div class="p-6">
             
-            <button 
-                type="submit" 
-                id="submitBtn"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors duration-200 flex justify-center items-center gap-2"
-            >
-                <span>บันทึกข้อความ</span>
-            </button>
-        </form>
+            <!-- ฟอร์มสำหรับส่งข้อมูล -->
+            <form id="textForm" class="space-y-4">
+                <div>
+                    <textarea 
+                        id="messageInput" 
+                        rows="4" 
+                        class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none text-gray-800"
+                        placeholder="พิมพ์ข้อความของคุณที่นี่..."
+                        required
+                    ></textarea>
+                </div>
+                
+                <button 
+                    type="submit" 
+                    id="submitBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3 rounded-xl transition-colors duration-200 flex justify-center items-center gap-2 shadow-sm focus:ring-4 focus:ring-blue-200 outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    <span id="submitBtnText">บันทึกข้อมูล</span>
+                </button>
+            </form>
 
-        <!-- ข้อความแจ้งเตือนสถานะ -->
-        <div id="statusMsg" class="mt-4 text-center text-sm font-medium h-5"></div>
+            <!-- ข้อความแจ้งเตือนสถานะ -->
+            <div id="statusMsg" class="mt-4 text-center text-sm font-medium h-6 transition-opacity duration-300"></div>
 
-        <!-- เส้นคั่น -->
-        <div class="border-t border-gray-200 mt-6 pt-6"></div>
+            <!-- เส้นคั่น -->
+            <div class="border-t border-gray-100 mt-5 pt-5"></div>
 
-        <!-- ส่วนแสดงข้อความบนหน้าเว็บ -->
-        <div>
-            <h2 class="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
-                📝 ข้อความล่าสุด
-            </h2>
-            <!-- กล่องรายการข้อความ -->
-            <div id="messageList" class="space-y-3 max-h-80 overflow-y-auto pr-2">
-                <!-- ข้อความจะถูกเพิ่มที่นี่อัตโนมัติด้วย JavaScript -->
-                <p id="emptyState" class="text-gray-400 text-sm text-center py-4">ยังไม่มีข้อความในเซสชันนี้</p>
+            <!-- ส่วนแสดงข้อความบนหน้าเว็บ -->
+            <div>
+                <h2 class="text-lg font-medium text-gray-800 mb-4 flex items-center gap-2">
+                    📋 ข้อความล่าสุดในเซสชันนี้
+                </h2>
+                
+                <!-- กล่องรายการข้อความ -->
+                <div id="messageList" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                    <!-- สถานะตอนยังไม่มีข้อความ -->
+                    <div id="emptyState" class="text-gray-400 text-sm text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        ยังไม่มีข้อความ กรุณาพิมพ์แล้วกดบันทึก
+                    </div>
+                    <!-- ข้อความจะถูกเพิ่มที่นี่อัตโนมัติด้วย JavaScript -->
+                </div>
             </div>
-        </div>
 
+        </div>
     </div>
 
-    <!-- JavaScript สำหรับส่งข้อมูลและแสดงผล -->
     <script>
-        const form = document.getElementById('textForm');
-        const messageInput = document.getElementById('messageInput');
-        const submitBtn = document.getElementById('submitBtn');
-        const statusMsg = document.getElementById('statusMsg');
-        const messageList = document.getElementById('messageList');
-        const emptyState = document.getElementById('emptyState');
+        document.addEventListener('DOMContentLoaded', () => {
+            // ดึง Element จาก DOM มาเก็บในตัวแปร
+            const form = document.getElementById('textForm');
+            const messageInput = document.getElementById('messageInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitBtnText = document.getElementById('submitBtnText');
+            const statusMsg = document.getElementById('statusMsg');
+            const messageList = document.getElementById('messageList');
+            const emptyState = document.getElementById('emptyState');
 
-        // URL ของ Google Apps Script ของคุณ
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwq1L7j3qJ1wyHxUSLitk5TR8nD80hflg4q6ubyfrOUxM8_Dl-n4RFXx0VMNGpkZz9H/exec';
+            // URL ของ Google Apps Script ที่ระบุมา
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzKCSbdbIuP-bczDwPkOH2GlAV62dmbTJ9yRy2NoZMiyApM90eUnTehYA-Re6nkMZn92A/exec';
 
-        form.addEventListener('submit', e => {
-            e.preventDefault();
-            const textValue = messageInput.value.trim();
-            if (!textValue) return;
+            // ตัวแปรไอคอน
+            const loadingSpinner = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
 
-            // เปลี่ยนสถานะปุ่มเป็นกำลังโหลด
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `
-                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                กำลังส่งข้อมูล...
-            `;
-            statusMsg.innerHTML = '';
+            // จัดการ Event เมื่อกด Submit ฟอร์ม
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const textValue = messageInput.value.trim();
+                if (!textValue) return;
 
-            // แปลงข้อมูลให้อยู่ในรูปแบบ URLSearchParams
-            const formData = new URLSearchParams();
-            formData.append('text', textValue);
-            formData.append('message', textValue);
+                // 1. เปลี่ยนสถานะปุ่มเป็นกำลังโหลด
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = loadingSpinner + ' <span>กำลังบันทึก...</span>';
+                statusMsg.innerHTML = '';
+                messageInput.disabled = true;
 
-            // ส่งข้อมูลไปยัง Google Sheets
-            fetch(scriptURL, { 
-                method: 'POST', 
-                mode: 'no-cors', // เพิ่ม mode: 'no-cors' เพื่อแก้ปัญหา CORS Block
-                body: formData 
-            })
-            .then(response => {
-                // เมื่อใช้ no-cors เราอาจจะไม่ได้ response.ok ที่แท้จริงกลับมา 
-                // แต่ถ้าผ่านขั้นตอนนี้มาได้ มักจะแปลว่าข้อมูลถูกส่งออกไปแล้ว
-                
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'บันทึกข้อความ';
-                
-                statusMsg.innerHTML = '<span class="text-green-600">✅ ส่งข้อความแล้ว!</span>';
-                setTimeout(() => statusMsg.innerHTML = '', 3000);
+                // 2. สร้างข้อมูลเพื่อส่งไปให้ฝั่งเซิร์ฟเวอร์ (สร้าง ID อัตโนมัติจากเวลา)
+                const messageId = 'MSG_' + Date.now().toString();
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('th-TH') + ' น.';
 
-                // นำข้อความมาแสดงบนหน้าเว็บ
-                addMessageToScreen(textValue);
+                // ใช้ URLSearchParams เพื่อแก้ปัญหาเรื่องรูปแบบข้อมูลกับ GAS
+                const formData = new URLSearchParams();
+                formData.append('action', 'save');
+                formData.append('id', messageId);
+                formData.append('time', timeStr);
+                formData.append('text', textValue);
 
-                // เคลียร์กล่องข้อความ
-                messageInput.value = '';
-            })
-            .catch(error => {
-                console.error('Error!', error.message);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'บันทึกข้อความ';
-                statusMsg.innerHTML = '<span class="text-red-500">❌ เกิดข้อผิดพลาด กรุณาลองใหม่</span>';
+                try {
+                    // 3. ส่งข้อมูลไป Google Apps Script ด้วยโหมด no-cors 
+                    // โหมด no-cors จะไม่คืนค่าผลลัพธ์ว่าผ่านหรือไม่ในเบราว์เซอร์ แต่ข้อมูลส่งไปได้
+                    await fetch(SCRIPT_URL, { 
+                        method: 'POST', 
+                        mode: 'no-cors', 
+                        body: formData,
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        }
+                    });
+
+                    // 4. แสดงผลลัพธ์
+                    showStatus('✅ บันทึกข้อความสำเร็จ!', 'text-green-600');
+                    addMessageToScreen(messageId, textValue, timeStr); // แสดงข้อความบน UI
+                    messageInput.value = ''; // เคลียร์ช่องพิมพ์
+
+                } catch (error) {
+                    console.error('Error submitting data:', error);
+                    showStatus('❌ เกิดข้อผิดพลาด กรุณาลองใหม่', 'text-red-500');
+                } finally {
+                    // 5. รีเซ็ตปุ่มกลับสู่สภาพเดิม
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span id="submitBtnText">บันทึกข้อมูล</span>';
+                    messageInput.disabled = false;
+                    messageInput.focus();
+                }
             });
-        });
 
-        // ฟังก์ชันสร้างกล่องข้อความบนหน้าเว็บ
-        function addMessageToScreen(text) {
-            if (emptyState) {
-                emptyState.style.display = 'none';
+            // ฟังก์ชันสำหรับแสดงข้อความสถานะด้านล่างปุ่ม
+            function showStatus(text, colorClass) {
+                statusMsg.className = `mt-4 text-center text-sm font-medium h-6 transition-opacity duration-300 ${colorClass}`;
+                statusMsg.innerHTML = text;
+                // ลบข้อความทิ้งอัตโนมัติเมื่อผ่านไป 3 วินาที
+                setTimeout(() => {
+                    statusMsg.innerHTML = '';
+                }, 3000);
             }
 
-            const msgBox = document.createElement('div');
-            msgBox.className = 'p-3 bg-blue-50 border border-blue-100 rounded-xl shadow-sm text-gray-800 break-words';
-            
-            const timeDiv = document.createElement('div');
-            timeDiv.className = 'text-xs text-gray-500 mb-1';
-            const now = new Date();
-            timeDiv.innerText = now.toLocaleTimeString('th-TH') + ' น.';
+            // ฟังก์ชันสร้างการ์ดข้อความเล็กๆ บนหน้าเว็บ (พร้อมปุ่มคัดลอก และ ลบ)
+            function addMessageToScreen(id, text, timeStr) {
+                // ซ่อนข้อความ "ยังไม่มีข้อความ"
+                if (emptyState && emptyState.style.display !== 'none') {
+                    emptyState.style.display = 'none';
+                }
 
-            const textContent = document.createElement('div');
-            textContent.innerText = text;
+                // สร้างกล่องข้อความหลัก
+                const msgBox = document.createElement('div');
+                msgBox.className = 'msg-box p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow animate-fade-in relative group';
+                msgBox.id = `box-${id}`;
+                
+                // สร้างส่วนหัว (เวลาและปุ่ม)
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'flex justify-between items-start mb-2';
+                
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'text-xs text-gray-400 font-medium bg-gray-50 px-2 py-1 rounded-md';
+                timeDiv.innerText = '🕒 ' + timeStr;
 
-            msgBox.appendChild(timeDiv);
-            msgBox.appendChild(textContent);
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'flex gap-2';
 
-            messageList.prepend(msgBox);
-        }
+                // --- ปุ่มคัดลอก (Copy) ---
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'text-xs bg-white border border-gray-200 hover:bg-gray-100 hover:text-blue-600 text-gray-600 px-2.5 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1';
+                copyBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    คัดลอก
+                `;
+                
+                copyBtn.onclick = () => {
+                    // ใช้ execCommand แทน navigator.clipboard ป้องกันปัญหาใน Iframe
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";  // หลีกเลี่ยงการเลื่อนหน้าจอ
+                    textArea.style.opacity = 0;
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            const originalHtml = copyBtn.innerHTML;
+                            copyBtn.innerHTML = '✅ คัดลอกแล้ว';
+                            copyBtn.classList.replace('text-gray-600', 'text-green-600');
+                            copyBtn.classList.replace('border-gray-200', 'border-green-200');
+                            copyBtn.classList.add('bg-green-50');
+                            
+                            setTimeout(() => {
+                                copyBtn.innerHTML = originalHtml;
+                                copyBtn.classList.replace('text-green-600', 'text-gray-600');
+                                copyBtn.classList.replace('border-green-200', 'border-gray-200');
+                                copyBtn.classList.remove('bg-green-50');
+                            }, 2000);
+                        }
+                    } catch (err) {
+                        console.error('Fallback: Oops, unable to copy', err);
+                    }
+                    document.body.removeChild(textArea);
+                };
+
+                // --- ปุ่มลบ (Delete) ---
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'text-xs bg-red-50 border border-red-100 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1';
+                deleteBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    ลบ
+                `;
+                
+                deleteBtn.onclick = async () => {
+                    // สร้างกล่องยืนยันการลบแบบ Custom แทน alert()
+                    const isConfirmed = window.confirm("คุณต้องการลบข้อความนี้ใช่หรือไม่?");
+                    if (!isConfirmed) return;
+                    
+                    // ปรับปุ่มให้อยู่ในสถานะกำลังลบ
+                    deleteBtn.innerHTML = '⏳ กำลังลบ...';
+                    deleteBtn.disabled = true;
+                    copyBtn.disabled = true;
+                    msgBox.classList.add('opacity-50');
+
+                    // สร้างข้อมูลสำหรับส่งไปลบ
+                    const deleteData = new URLSearchParams();
+                    deleteData.append('action', 'delete');
+                    deleteData.append('id', id);
+
+                    try {
+                        await fetch(SCRIPT_URL, { 
+                            method: 'POST', 
+                            mode: 'no-cors', 
+                            body: deleteData,
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }
+                        });
+                        
+                        // เมื่อส่งคำสั่งลบสำเร็จ ให้ลบกล่องข้อความออกจาก UI
+                        msgBox.style.transform = 'scale(0.95)';
+                        msgBox.style.opacity = '0';
+                        setTimeout(() => {
+                            msgBox.remove();
+                            // ตรวจสอบว่ามีข้อความเหลืออยู่ไหม ถ้าไม่มีให้โชว์ Empty state
+                            const remainingBoxes = document.querySelectorAll('.msg-box');
+                            if (remainingBoxes.length === 0 && emptyState) {
+                                emptyState.style.display = 'block';
+                            }
+                        }, 300); // รอจังหวะ transition หายไปนิดนึง
+
+                        showStatus('🗑️ ลบข้อความแล้ว', 'text-gray-600');
+
+                    } catch (error) {
+                        console.error('Error deleting data:', error);
+                        showStatus('❌ เกิดข้อผิดพลาดในการลบ กรุณาลองใหม่', 'text-red-500');
+                        // รีเซ็ตปุ่มกลับคืน
+                        deleteBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            ลบ
+                        `;
+                        deleteBtn.disabled = false;
+                        copyBtn.disabled = false;
+                        msgBox.classList.remove('opacity-50');
+                    }
+                };
+
+                // ประกอบชิ้นส่วนต่างๆ เข้าด้วยกัน
+                actionDiv.appendChild(copyBtn);
+                actionDiv.appendChild(deleteBtn);
+                
+                headerDiv.appendChild(timeDiv);
+                headerDiv.appendChild(actionDiv);
+
+                const textContent = document.createElement('div');
+                textContent.className = 'text-gray-800 break-words whitespace-pre-wrap mt-2 bg-blue-50/50 p-3 rounded-lg border border-blue-50 text-sm';
+                textContent.innerText = text;
+
+                msgBox.appendChild(headerDiv);
+                msgBox.appendChild(textContent);
+
+                // นำกล่องข้อความนี้ไปต่อไว้ด้านบนสุดของรายการ
+                messageList.prepend(msgBox);
+            }
+        });
     </script>
 </body>
 </html>
